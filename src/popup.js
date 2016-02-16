@@ -17,8 +17,10 @@ function set(id, start, length, noacc) {
 
 chrome.tabs.getSelected(null, function (tab) {
     chrome.storage.local.get('cache', function(data) {
-        var t = data.cache['tab' + tab.id],
-        start = t.redirectStart == 0 ?t.fetchStart : t.redirectStart;
+        var allTimingData = data.cache['tab' + tab.id],
+            lastItem = allTimingData.length - 1,
+            t = allTimingData[lastItem],
+            start = (t.redirectStart == 0) ? t.fetchStart : t.redirectStart;
 
         total = t.loadEventEnd - start;
 
@@ -35,5 +37,16 @@ chrome.tabs.getSelected(null, function (tab) {
         set('load', t.loadEventStart - start, t.loadEventEnd - t.loadEventStart);
 
         document.getElementById('totalTotal').innerHTML = (total / 1000).toPrecision(3).substring(0, 4).toString() + ' seconds';
+
+        var prevTimings = allTimingData.map(function(val, index){
+            if (index < lastItem) {
+                var start = (val.redirectStart == 0) ? val.fetchStart : val.redirectStart,
+                    total = val.loadEventEnd - start;
+
+                return (total / 1000).toPrecision(3).substring(0, 4).toString() + ' seconds';
+            }
+        });
+
+        document.getElementById('prevTotal').innerHTML = prevTimings;
     });
 });
