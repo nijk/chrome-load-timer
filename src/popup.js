@@ -33,5 +33,7 @@ chrome.tabs.getSelected(null, function (tab) {
         set('contentLoaded', t.domContentLoadedEventStart - start,
             t.domContentLoadedEventEnd - t.domContentLoadedEventStart, true);
         set('load', t.loadEventStart - start, t.loadEventEnd - t.loadEventStart);
+
+        document.getElementById('totalTotal').innerHTML = (total / 1000).toPrecision(3).substring(0, 4).toString() + ' seconds';
     });
 });
