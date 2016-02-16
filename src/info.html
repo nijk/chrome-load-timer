@@ -1,40 +1,91 @@
  <!DOCTYPE html>
 <style> 
     body {
+        margin: 0;
+        padding: 10px;
         font-family: Tahoma, sans-serif;
         font-size: 10pt;
+        color: #efefef;
+        background-color: #333;
     }
+
     #container {
-        width: 301px;
+        min-width: 350px;
     }
-    span {
-        width: 58px;
-        display: inline-block;       
-        border-left: 1px solid #888;
-        text-align: right;
+
+    .row, #header {
+        border: 1px solid #666;
+        border-width: 0 0 1px 0;
     }
-    .lbl {
-        width: 100px;
-        text-align: left;
-        padding-left: 4px;
+
+    #header, #footer {
+        color: #03a9f4;
     }
+
+    #header {
+        background-color: #333;
+        border-top-width: 1px;
+    }
+
+    .row {
+        background-repeat: no-repeat;
+        background-image: -webkit-linear-gradient(top left, rgba(171,171,171,0.6), rgba(171,171,171,0.6) 100.0%);
+
+    }
+
     .sub {
         text-indent: 10px;
     }
-    .row, #header {
-        border: 1px solid #888;
-        border-width: 0 1px 1px 0;
+
+    #header span,
+    .row span {
+        width: 58px;
+        padding: 5px;
+        display: inline-block;
+        text-align: right;
     }
-    #header {
-        border-top-width: 1px;
+
+    #header .lbl,
+    .row .lbl {
+        min-width: 100px;
+        text-align: left;
     }
-    #header span {
-        text-align: center;
+
+    #footer h4 {
+        display: inline-block;
     }
-    .row {
-        background-image: -webkit-gradient(linear, left bottom, left top,
-            color-stop(0.49, #a9d0e3), color-stop(0.75, #c3e0ee));
-        background-repeat: no-repeat;
+
+    #footer #totalTotal {
+        float: right;
+    }
+
+    #footer, #footer .row {
+        background: none;
+        border: 0 none;
+    }
+
+    .row#r-dns {
+        background-image: -webkit-linear-gradient(top left, rgba(0,150,136,0.6), rgba(0,150,136,0.6) 100.0%);
+    }
+
+    .row#r-connect {
+        background-image: -webkit-linear-gradient(top left, rgba(255,152,0,0.6), rgba(255,152,0,0.6) 100.0%);
+    }
+
+    .row#r-request {
+        background-image: -webkit-linear-gradient(top left, rgba(193,204,209,0.6), rgba(193,204,209,0.6) 100.0%);
+    }
+
+    .row#r-response {
+        background-image: -webkit-linear-gradient(top left, rgba(0,200,83,0.6), rgba(0,200,83,0.6) 100.0%);
+    }
+
+    .row#r-dom {
+        background-image: -webkit-linear-gradient(top left, rgba(3,169,244,0.6), rgba(3,169,244,0.6) 100.0%);
+    }
+
+    .row#r-load {
+        background-image: -webkit-linear-gradient(top left, rgba(156,39,176,0.6), rgba(156,39,176,0.6) 100.0%);
     }
     
 </style>
@@ -101,5 +152,11 @@
         <span id="loadWhen"></span>
         <span id="load"></span>
         <span id="loadTotal"></span>
+    </div>
+    <div id="footer">
+        <div class="row" id="r-total">
+            <h4 class="lbl">Total</h4>
+            <h4 id="totalTotal"></h4>
+        </div>
     </div>
 </div>
