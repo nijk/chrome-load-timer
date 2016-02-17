@@ -22,8 +22,6 @@ chrome.tabs.getSelected(null, function (tab) {
             t = allTimingData[lastItem],
             start = (t.redirectStart == 0) ? t.fetchStart : t.redirectStart;
 
-        console.info('allTimingData', allTimingData, t);
-
         total = t.loadEventEnd - start;
 
         // https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#processing-model
@@ -44,8 +42,6 @@ chrome.tabs.getSelected(null, function (tab) {
             if (index < lastItem) {
                 var start = (val.redirectStart == 0) ? val.fetchStart : val.redirectStart,
                     total = val.loadEventEnd - start;
-
-                console.info('total', start, val.loadEventEnd, total);
 
                 return (total / 1000).toPrecision(3).substring(0, 4).toString() + ' seconds';
             }

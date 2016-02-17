@@ -12,3 +12,4 @@ This project is licensed under the terms of the MIT license.
 1. Refactor previous timings into cache
 2. Create DRY style functions/methods for repeated code
 3. Refactor document.innerHTML => document.createDocumentFragment
+4. Convert to ES2015
