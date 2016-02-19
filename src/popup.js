@@ -82,15 +82,72 @@ function formatTiming (total) {
     return (total / 1000).toFixed(3).substring(0, 5).toString();
 }
 
+function createTimingRow (timing, total) {
+    var bgWidth = Math.round(timing.start / total * 300);
+    var $timingRow, $timingLabel, $timingStart, $timingEnd, $timingTotal;
+
+    if (!timing.noacc) acc += timing.length;
+
+    $timingRow = document.createElement('div');
+    $timingRow.classList.add('timing-row', 'timing-' + timing.title.toLowerCase());
+
+    $timingLabel = document.createElement('span');
+    $timingLabel.appendChild(document.createTextNode(timing.title));
+    $timingLabel.classList.add('timing-title', 'lbl');
+
+    $timingStart = document.createElement('span');
+    $timingStart.appendChild(document.createTextNode(formatTiming(timing.start)));
+    $timingStart.classList.add('timing-start');
+
+    $timingEnd = document.createElement('span');
+    $timingEnd.appendChild(document.createTextNode(formatTiming(timing.length)));
+    $timingEnd.classList.add('timing-end');
+
+    $timingTotal = document.createElement('span');
+    $timingTotal.appendChild(document.createTextNode(timing.noacc ? '-' : formatTiming(acc)));
+    $timingTotal.classList.add('timing-total');
+
+
+    $timingRow.appendChild($timingLabel);
+    $timingRow.appendChild($timingStart);
+    $timingRow.appendChild($timingEnd);
+    $timingRow.appendChild($timingTotal);
+
+    $timingRow.setAttribute('style',
+        'background-size:' + Math.round(timing.length / total * 300) + 'px 100%;' +
+        'background-position-x:' + (bgWidth >= 300 ? 299 : bgWidth) + 'px;'
+    );
+
+    return $timingRow;
+}
+
+function createTimingTotalRow (total) {
+    var $timingTotalRow, $timingTotalLabel, $timingTotal;
+
+    $timingTotalRow = document.createElement('div');
+    $timingTotalRow.classList.add('timing-row', 'footer-row');
+
+    $timingTotalLabel = document.createElement('h3');
+    $timingTotalLabel.appendChild(document.createTextNode('Total'));
+    $timingTotalLabel.classList.add('lbl');
+
+    $timingTotal = document.createElement('h3');
+    $timingTotal.appendChild(document.createTextNode(formatTiming(total)));
+    $timingTotal.classList.add('totals');
+
+    $timingTotalRow.appendChild($timingTotalLabel);
+    $timingTotalRow.appendChild($timingTotal);
+
+    return $timingTotalRow;
+}
+
 function createPreviousTimings (timingData, currentTotal, timingMeanTotal) {
-    var $timings = document.querySelector('#timings'),
-        $fragment = document.createDocumentFragment(),
-        $wrapper = document.createElement('div'),
-        $label = document.createElement('h3'),
-        $totals = document.createElement('ol'),
-        $meanWrapper = document.createElement('div'),
-        $meanLabel = document.createElement('h3'),
-        $meanTotal = document.createElement('h3');
+    var $wrapper = document.createElement('div');
+    var $label = document.createElement('h3');
+    var $totals = document.createElement('ol');
+    var $meanWrapper = document.createElement('div');
+    var $meanLabel = document.createElement('h3');
+    var $meanTotal = document.createElement('h3');
 
     $label.appendChild(document.createTextNode('Previous totals'));
     $label.classList.add('lbl');
@@ -102,22 +159,17 @@ function createPreviousTimings (timingData, currentTotal, timingMeanTotal) {
     $meanLabel.classList.add('lbl');
 
     $wrapper.id = 'previous-totals';
-    $wrapper.classList.add('row', 'footer-row');
+    $wrapper.classList.add('timing-row', 'footer-row');
 
     $meanWrapper.id = 'mean-total';
-    $meanWrapper.classList.add('row', 'footer-row');
+    $meanWrapper.classList.add('timing-row', 'footer-row');
 
     timingData.reverse().forEach(function (timing) {
-        var $elem = document.createElement('li'),
-            total = calculateTimingTotal(timing);
+        var $elem = document.createElement('li');
+        var total = calculateTimingTotal(timing);
 
-        if (total * 0.9 < currentTotal) {
-            $elem.classList.add('total--faster');
-        }
-
-        if (total * 0.9 > currentTotal) {
-            $elem.classList.add('total--slower');
-        }
+        if (total * 0.9 < currentTotal) $elem.classList.add('total--faster');
+        if (total * 0.9 > currentTotal) $elem.classList.add('total--slower');
 
         $elem.classList.add('total');
         $elem.appendChild(document.createTextNode(formatTiming(total)));
@@ -126,46 +178,43 @@ function createPreviousTimings (timingData, currentTotal, timingMeanTotal) {
 
     $wrapper.appendChild($label);
     $wrapper.appendChild($totals);
-    $fragment.appendChild($wrapper);
-    $timings.appendChild($fragment);
+
+    return $wrapper;
 }
 
 chrome.tabs.query({ active: true, status: 'complete' }, function(tabs) {
     var tab = tabs[0];
-    if (tab) {
-        chrome.storage.local.get('cache', function (data) {
-            var timingData = data.cache['tab' + tab.id],
-                timingMeanTotal = calculateTimingMean(timingData),
-                t = timingData.pop(),
-                start = (t.redirectStart == 0) ? t.fetchStart : t.redirectStart,
-                total = calculateTimingTotal(t);
+    var tabName;
+    var timingData, timingMeanTotal, t, timing, total;
+    var $timings, $fragment;
+
+    chrome.storage.local.get('cache', function (data) {
+        tabName = 'tab' + tab.id;
+
+        if (tab && data.cache[tabName]) {
+            timingData = data.cache[tabName];
+            timingMeanTotal = calculateTimingMean(timingData);
+            t = timingData.pop();
+            total = calculateTimingTotal(t);
+
+            $timings = document.querySelector('#timings');
+            $fragment = document.createDocumentFragment();
 
             timings.map(function (item) {
-                var timing = (typeof item.calc === 'function') ? item.calc.call(this, t, item.name) : calculateTiming(t, item.name);
+                timing = (typeof item.calc === 'function') ? item.calc.call(this, t, item.name) : calculateTiming(t, item.name);
                 timing.title = item.title || item.name;
                 timing.noacc = item.noacc || false;
-                return timing;
-            }).reduce(function (prev, curr) {
-                console.info('timing', curr.title, curr);
-                var x = Math.round(curr.start / total * 300);
 
-                if (!curr.noacc) {
-                    acc += curr.length;
-                }
+                $fragment.appendChild(createTimingRow(timing, total));
+            });
 
-                document.getElementById(curr.title + 'When').innerHTML = formatTiming(curr.start);
-                document.getElementById(curr.title).innerHTML = formatTiming(curr.length);
-                document.getElementById(curr.title + 'Total').innerHTML = curr.noacc ? '-' : formatTiming(acc);
-                document.getElementById('r-' + curr.title).style.cssText =
-                    'background-size:' + Math.round(curr.length / total * 300) + 'px 100%;' +
-                    'background-position-x:' + (x >= 300 ? 299 : x) + 'px;';
-            }, {});
-
-            document.querySelector('#footer-total .totals').innerHTML = formatTiming(total);
+            $fragment.appendChild(createTimingTotalRow(total));
 
             if (timingData.length > 1) {
-                createPreviousTimings(timingData, total, timingMeanTotal);
+                $fragment.appendChild(createPreviousTimings(timingData, total, timingMeanTotal));
             }
-        });
-    }
+
+            $timings.appendChild($fragment);
+        }
+    });
 });
