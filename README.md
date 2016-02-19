@@ -9,7 +9,6 @@ http://schollidesign.deviantart.com/art/Human-O2-Iconset-105344123
 This project is licensed under the terms of the MIT license.
 
 # Todo
-1. Refactor previous timings into cache
+1. Refactor document.innerHTML => document.createDocumentFragment
 2. Create DRY style functions/methods for repeated code
-3. Refactor document.innerHTML => document.createDocumentFragment
-4. Convert to ES2015
+3. Convert to ES2015
