@@ -1,0 +1,127 @@
+html {
+    height: 100%;
+    min-height: 100%;
+    font-size: 62.5%;
+}
+
+body {
+    margin: 0;
+    padding: 1rem;
+    font-family: Tahoma, sans-serif;
+    font-size: 14px;
+    font-size: 1.4rem;
+    line-height: 1.5;
+    color: #efefef;
+    background-color: #333;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    padding: 0;
+    font-weight: 500;
+}
+
+h1 {
+    font-size: 2rem;
+}
+
+h2 {
+    font-size: 1.8rem;
+    font-weight: 300;
+}
+
+h3 {
+    font-size: 1.6rem;
+}
+
+ol, ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+#timings {
+    display: flex;
+    flex-wrap: wrap;
+    width: 50rem;
+    margin: 1rem 0;
+}
+
+.row {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    border: 1px solid #666;
+    border-width: 0 0 1px 0;
+    background: -webkit-linear-gradient(top left, rgba(171,171,171,0.6), rgba(171,171,171,0.6) 100.0%) no-repeat;
+    background-size: 0 100%;
+    transition: background-size 0.4s ease-in-out 0.1s;
+}
+
+.header-row {
+    border-top-width: 1px;
+}
+
+.header-row,
+.footer-row {
+    color: rgb(153,212,255);
+    background: none;
+}
+
+.sub {
+    text-indent: 1rem;
+}
+
+.row > * {
+    min-width: 5rem;
+    width: auto;
+    padding: 0.5rem;
+    text-align: right;
+}
+
+.lbl {
+    min-width: 10rem;
+    text-align: left;
+}
+
+.totals {
+    font-size: 1.6rem;
+    font-weight: 500;
+}
+
+.row#r-dns {
+    background-image: -webkit-linear-gradient(top left, rgba(0,150,136,0.6), rgba(0,150,136,0.6) 100.0%);
+}
+
+.row#r-connect {
+    background-image: -webkit-linear-gradient(top left, rgba(255,152,0,0.6), rgba(255,152,0,0.6) 100.0%);
+}
+
+.row#r-request {
+    background-image: -webkit-linear-gradient(top left, rgba(193,204,209,0.6), rgba(193,204,209,0.6) 100.0%);
+}
+
+.row#r-response {
+    background-image: -webkit-linear-gradient(top left, rgba(0,200,83,0.6), rgba(0,200,83,0.6) 100.0%);
+}
+
+.row#r-dom {
+    background-image: -webkit-linear-gradient(top left, rgba(3,169,244,0.6), rgba(3,169,244,0.6) 100.0%);
+}
+
+.row#r-load {
+    background-image: -webkit-linear-gradient(top left, rgba(156,39,176,0.6), rgba(156,39,176,0.6) 100.0%);
+}
+
+#previous-totals .lbl,
+#previous-totals .totals {
+    color: rgba(153,212,255,0.6);
+}
+
+#previous-totals .total.total--slower {
+    color: rgba(255,152,0,0.6);
+}
+
+#previous-totals .total.total--faster {
+    color: rgba(0,200,83,0.6);
+}
