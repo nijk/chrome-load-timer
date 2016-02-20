@@ -6,23 +6,12 @@ var Popup = function Popup (timings) {
     this.timing = timings.pop();
     this.timingsPrev = timings;
 
-    this.start = 0;
-    this.total = 0;
-    this.mean = 0;
-
     this.setStart()
         .setTotal()
         .setMean();
-
 };
 
 Popup.prototype = {
-    // Setup instance methods
-
-    formatTime: function (time) {
-        return (time / 1000).toFixed(3).substring(0, 5).toString();
-    },
-
     setStart: function () {
         this.start = this.getTimingStart(this.timing);
         return this;
@@ -47,8 +36,11 @@ Popup.prototype = {
     },
 
     getTimingTotal: function (timing) {
-        console.info('getTimingTotal', timing.loadEventEnd - this.getTimingStart(timing));
         return timing.loadEventEnd - this.getTimingStart(timing);
+    },
+
+    formatTime: function (time) {
+        return (time / 1000).toFixed(3).substring(0, 5).toString();
     }
 };
 
@@ -83,7 +75,7 @@ chrome.tabs.query({ active: true, status: 'complete' }, function(tabs) {
                 document.getElementById('r-' + id).style.cssText =
                     'background-size:' + Math.round(duration / total * 300) + 'px 100%;' +
                     'background-position-x:' + (x >= 300 ? 299 : x) + 'px;';
-            };
+            }
 
             // https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#processing-model
             updateRow('redirect', 0, timing.redirectEnd - timing.redirectStart);
