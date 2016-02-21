@@ -9,6 +9,8 @@ http://schollidesign.deviantart.com/art/Human-O2-Iconset-105344123
 This project is licensed under the terms of the MIT license.
 
 # Todo
-1. Refactor document.innerHTML => document.createDocumentFragment
-2. Create DRY style functions/methods for repeated code
-3. Convert to ES2015
+1. Write summary of changes; additions, improvements, future improvements 
+2. Add (% faster/slower) to main total
+3. Provide functionality to review timings table from click any previous totals, plus a way to revert to current timings
+
+

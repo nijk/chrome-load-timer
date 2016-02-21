@@ -5,10 +5,7 @@ var Popup = function Popup (timings) {
     this.timingsAll = timings.slice(0);
     this.timing = timings.pop();
     this.timingsPrev = timings;
-
-    this.setStart()
-        .setTotal()
-        .setMean();
+    this.setStart().setTotal().setMean();
 };
 
 Popup.prototype = {
@@ -23,11 +20,11 @@ Popup.prototype = {
     },
 
     setMean: function () {
-        var accumulatedTime = this.timingsAll.reduce(function (prev, item) {
+        var accumulatedTotals = this.timingsAll.reduce(function (prev, item) {
             return prev + this.getTimingTotal(item);
         }.bind(this), 0);
 
-        this.mean = accumulatedTime / this.timingsAll.length;
+        this.mean = (accumulatedTotals / this.timingsAll.length).toFixed(0);
         return this;
     },
 
@@ -39,18 +36,21 @@ Popup.prototype = {
         return timing.loadEventEnd - this.getTimingStart(timing);
     },
 
-    formatTime: function (time) {
+    formatTime: function (time, showAbsoluteZero) {
+        if (0 === time && !showAbsoluteZero) return '';
         return (time / 1000).toFixed(3).substring(0, 5).toString();
     }
 };
 
-
-
-// Run stuff
+// Create the timing popup from the window.performance data in localStorage
 chrome.tabs.query({ active: true, status: 'complete' }, function(tabs) {
     var tab = tabs.shift();
-    var acc = 0;
     var tabName, timings, popup, timing, start, total;
+    var $fragment, $timings;
+    var $resultRow, $resultLabel, $resultStart, $resultDuration, $resultEnd;
+    var $totalRow, $totalLabel, $total;
+    var $previousWrapper, $totals, $previousTotals, $previousLabel, $previousLabelSpan, $previousTotal, $difference;
+    var $meanWrapper, $meanLabel, $meanTotal;
 
     if (tab) {
         tabName = 'tab' + tab.id;
@@ -61,84 +61,80 @@ chrome.tabs.query({ active: true, status: 'complete' }, function(tabs) {
             start = popup.start;
             total = popup.total;
 
-            // Do stuff with popup
-            console.info('Total Time', popup.formatTime(popup.total), popup);
+            $timings = $('#timings');
+            $fragment = document.createDocumentFragment();
 
-            function updateRow (id, start, duration, noacc) {
+            function updateRow (title, start, duration, noTotal) {
                 var x = Math.round(start / total * 300);
-            
-                if (!noacc) acc += duration;
-                
-                document.getElementById(id + 'When').innerHTML = popup.formatTime(start);
-                document.getElementById(id).innerHTML = popup.formatTime(duration);
-                document.getElementById(id + 'Total').innerHTML = noacc ? '-' : popup.formatTime(acc);
-                document.getElementById('r-' + id).style.cssText =
-                    'background-size:' + Math.round(duration / total * 300) + 'px 100%;' +
-                    'background-position-x:' + (x >= 300 ? 299 : x) + 'px;';
+                var rowTotal = (noTotal) ? '-' : popup.formatTime(start + duration, true);
+                var bgWidth = Math.round(duration / total * 300);
+                var bgPos = (x >= 300 ? 299 : x);
+                var rowID = 'result-' + title.toLowerCase().replace(' ', '-');
+
+                $resultLabel = $.create('span', title, { class: 'lbl' });
+                $resultStart = $.create('span', popup.formatTime(start), { class: 'result-start' });
+                $resultDuration = $.create('span', popup.formatTime(duration), { class: 'result-duration' });
+                $resultEnd = $.create('span', rowTotal, { class: 'result-end' });
+                $resultRow = $.create('div', [$resultLabel, $resultStart, $resultDuration, $resultEnd], { id: rowID, class: 'row' });
+
+                // This is nasty, but without adding/removing classes to display/hide the background
+                // it is the only way to trigger a CSS animation after the content is inserted into the DOM.
+                setTimeout(function () {
+                    document.getElementById(rowID).style.cssText = 'background-size:' + bgWidth + 'px 100%; background-position-x:' + bgPos + 'px;';
+                }, 300);
+
+                $fragment.appendChild($resultRow);
             }
 
             // https://dvcs.w3.org/hg/webperf/raw-file/tip/specs/NavigationTiming/Overview.html#processing-model
-            updateRow('redirect', 0, timing.redirectEnd - timing.redirectStart);
-            updateRow('dns', timing.domainLookupStart - start, timing.domainLookupEnd - timing.domainLookupStart);
-            updateRow('connect', timing.connectStart - start, timing.connectEnd - timing.connectStart);
-            updateRow('request', timing.requestStart - start, timing.responseStart - timing.requestStart);
-            updateRow('response', timing.responseStart - start, timing.responseEnd - timing.responseStart);
-            updateRow('dom', timing.domLoading - start, timing.domComplete - timing.domLoading);
-            updateRow('domInteractive', timing.domInteractive - start, 0, true);
-            updateRow('contentLoaded', timing.domContentLoadedEventStart - start,
-                timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart, true);
-            updateRow('load', timing.loadEventStart - start, timing.loadEventEnd - timing.loadEventStart);
-            
-            document.querySelector('#footer-total .totals').innerHTML = popup.formatTime(total);
+            updateRow('Redirect', 0, timing.redirectEnd - timing.redirectStart);
+            updateRow('DNS', timing.domainLookupStart - start, timing.domainLookupEnd - timing.domainLookupStart);
+            updateRow('Connect', timing.connectStart - start, timing.connectEnd - timing.connectStart);
+            updateRow('Request', timing.requestStart - start, timing.responseStart - timing.requestStart);
+            updateRow('Response', timing.responseStart - start, timing.responseEnd - timing.responseStart);
+            updateRow('DOM', timing.domLoading - start, timing.domComplete - timing.domLoading);
+            updateRow('Interactive', timing.domInteractive - start, 0, true);
+            updateRow('Content loaded', timing.domContentLoadedEventStart - start, timing.domContentLoadedEventEnd - timing.domContentLoadedEventStart, true);
+            updateRow('Load event', timing.loadEventStart - start, timing.loadEventEnd - timing.loadEventStart);
+
+            $totalLabel = $.create('h3', 'Total', { class: 'lbl' });
+            $total = $.create('h3', popup.formatTime(total), { class: 'totals' });
+            $totalRow = $.create('div', [$totalLabel, $total], { id: 'footer-total', class: ['row', 'footer-row'] });
+            $fragment.appendChild($totalRow);
 
             if (timings.length > 1) {
-                var $timings = document.querySelector('#timings'),
-                    $fragment = document.createDocumentFragment(),
-                    $wrapper = document.createElement('div'),
-                    $label = document.createElement('h3'),
-                    $totals = document.createElement('ol'),
-                    $meanWrapper = document.createElement('div'),
-                    $meanLabel = document.createElement('h3'),
-                    $meanTotal = document.createElement('h3');
+                $previousLabelSpan = $.create('span', '(% faster/slower than mean)', { class: 'difference' });
+                $previousLabel = $.create('h3', ['Previous totals', $previousLabelSpan], { class: 'lbl' });
+                $meanLabel = $.create('h3', 'Average (mean) total', { class: 'lbl' });
+                $meanTotal = $.create('h3', popup.formatTime(popup.mean), { class: 'totals' });
+                $meanWrapper = $.create('div', [$meanLabel, $meanTotal], { id: 'mean-total', class: ['row', 'footer-row', 'additional-info'] });
 
-                $label.appendChild(document.createTextNode('Previous totals'));
-                $label.classList.add('lbl');
+                $previousTotals = popup.timingsPrev.reverse().map(function (previous) {
+                    var previousTotal = popup.getTimingTotal(previous);
+                    var classes = ['total'];
+                    var difference = '';
+                    var percentageDifference = (((previousTotal / popup.mean) * 100) - 100).toFixed(0);
 
-                $totals.classList.add('totals');
-
-                $meanLabel.appendChild(document.createTextNode('Average (mean) total'));
-                $meanTotal.appendChild(document.createTextNode(popup.formatTime(popup.mean)));
-                $meanLabel.classList.add('lbl');
-
-                $wrapper.id = 'previous-totals';
-                $wrapper.classList.add('row', 'footer-row');
-
-                $meanWrapper.id = 'mean-total';
-                $meanWrapper.classList.add('row', 'footer-row');
-
-                popup.timingsPrev.reverse().forEach(function (item) {
-                    var $elem = document.createElement('li');
-                    var itemTotal = popup.getTimingTotal(item);
-
-                    if (total * 0.9 < itemTotal) {
-                        $elem.classList.add('total--faster');
+                    if (percentageDifference < -10) {
+                        difference = '(' + percentageDifference.substring(1) + '% faster)';
+                        classes.push('total--faster');
+                    }
+                    if (percentageDifference > 10) {
+                        difference = '(' + percentageDifference + '% slower)';
+                        classes.push('total--slower');
                     }
 
-                    if (total * 0.9 > itemTotal) {
-                        $elem.classList.add('total--slower');
-                    }
-
-                    $elem.classList.add('total');
-                    $elem.appendChild(document.createTextNode(popup.formatTime(itemTotal)));
-                    $totals.appendChild($elem);
+                    $difference = $.create('span', difference, { class: 'difference' } );
+                    $previousTotal = $.create('span', popup.formatTime(previousTotal), { class: 'previous-total' });
+                    return $.create('li', [$difference, $previousTotal], { class: classes });
                 });
 
-                $wrapper.appendChild($label);
-                $wrapper.appendChild($totals);
-                $fragment.appendChild($wrapper);
-                $timings.appendChild($fragment);
+                $totals = $.create('ol', $previousTotals, { class: 'totals' });
+                $previousWrapper = $.create('div', [$previousLabel, $totals], { id: 'previous-totals', class: ['row', 'footer-row', 'additional-info']});
+                $fragment.appendChild($previousWrapper);
+                $fragment.appendChild($meanWrapper);
             }
-
+            setTimeout(function () { $timings.append($fragment) }, 100);
         });
     }
 });
