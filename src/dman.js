@@ -47,9 +47,9 @@
 
         this.length = results.length;
 
-        results.forEach(function(item, index) {
-            this[index] = item;
-        }, this);
+        for (var i = 0; i < results.length; i++) {
+            this[i] = results[i];
+        }
 
         return this;
     };
